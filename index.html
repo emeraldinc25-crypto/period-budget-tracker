@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Period + Budget Tracker - V9</title>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', sans-serif; }
+  body { background:#FFF5F7; color:#333; padding:15px; }
+  h1 { text-align:center; color:#D63384; margin-bottom:15px; }
+  .card { background:white; border-radius:12px; padding:15px; margin-bottom:15px; box-shadow:0 2px 8px rgba(214,51,132,0.1); }
+  .card h2 { color:#D63384; font-size:16px; margin-bottom:10px; }
+  input, select, button { width:100%; padding:10px; margin:5px 0; border:1px solid #FFB3D1; border-radius:8px; font-size:14px; }
+  button { background:#D63384; color:white; border:none; font-weight:bold; cursor:pointer; }
+  button:hover { background:#B52A6F; }
+  .tracker-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .tracker-item { background:#FFE6F0; padding:10px; border-radius:8px; text-align:center; }
+  .tracker-item h3 { font-size:12px; color:#666; }
+  .tracker-item p { font-size:18px; font-weight:bold; color:#D63384; }
+  .expense-list { list-style:none; }
+  .expense-list li { display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid #FFE6F0; }
+  .delete-btn { background:red; color:white; border:none; padding:2px 8px; border-radius:4px; font-size:12px; }
+</style>
+</head>
+<body>
+
+<h1>🩷 Period + Budget Buddy 🩷</h1>
+
+<div class="card">
+  <h2>1. Period Tracker</h2>
+  <input type="date" id="lastPeriod">
+  <input type="number" id="cycleLength" placeholder="Cycle Length - e.g. 28" value="28">
+  <button onclick="predictPeriod()">Predict Next Period</button>
+  <div class="tracker-grid">
+    <div class="tracker-item"><h3>Next Period</h3><p id="nextPeriod">--</p></div>
+    <div class="tracker-item"><h3>Days Left</h3><p id="daysLeft">--</p></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>2. Monthly Budget - NGN ₦</h2>
+  <input type="number" id="income" placeholder="Monthly Income">
+  <input type="text" id="expenseName" placeholder="Expense Name - e.g. Pad, Transport">
+  <input type="number" id="expenseAmount" placeholder="Amount">
+  <button onclick="addExpense()">Add Expense</button>
+  <ul class="expense-list" id="expenseList"></ul>
+  <div class="tracker-grid">
+    <div class="tracker-item"><h3>Total Spent</h3><p id="totalSpent">₦0</p></div>
+    <div class="tracker-item"><h3>Balance</h3><p id="balance">₦0</p></div>
+  </div>
+</div>
+
+<script>
+let expenses = [];
+function predictPeriod() {
+  const last = new Date(document.getElementById('lastPeriod').value);
+  const cycle = parseInt(document.getElementById('cycleLength').value);
+  if(!last) return alert('Select last period date');
+  const next = new Date(last);
+  next.setDate(last.getDate() + cycle);
+  const days = Math.ceil((next - new Date()) / (1000*60*60*24));
+  document.getElementById('nextPeriod').innerText = next.toDateString();
+  document.getElementById('daysLeft').innerText = days + ' days';
+}
+function addExpense() {
+  const name = document.getElementById('expenseName').value;
+  const amount = parseFloat(document.getElementById('expenseAmount').value);
+  if(!name || !amount) return alert('Fill name and amount');
+  expenses.push({name, amount});
+  updateBudget();
+  document.getElementById('expenseName').value = '';
+  document.getElementById('expenseAmount').value = '';
+}
+function updateBudget() {
+  const income = parseFloat(document.getElementById('income').value) || 0;
+  const total = expenses.reduce((a,b) => a + b.amount, 0);
+  const balance = income - total;
+  document.getElementById('totalSpent').innerText = '₦' + total.toLocaleString();
+  document.getElementById('balance').innerText = '₦' + balance.toLocaleString();
+  const list = document.getElementById('expenseList');
+  list.innerHTML = '';
+  expenses.forEach((e,i) => {
+    list.innerHTML += `<li>${e.name} <span>₦${e.amount.toLocaleString()} <button class="delete-btn" onclick="deleteExpense(${i})">X</button></span></li>`;
+  });
+}
+function deleteExpense(i) {
+  expenses.splice(i,1);
+  updateBudget();
+}
+</script>
+</body>
+</html>
